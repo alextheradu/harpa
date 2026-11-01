@@ -2,3 +2,7 @@
     font-family: Darumadrop One, Jua, Montserrat, Futura;
     color: rgb(255, 227, 181);
 } 
+img {
+    user-select: none;
+    -webkit-user-drag: none;
+}

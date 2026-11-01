@@ -1,6 +1,9 @@
 <script>
+// @ts-nocheck
+
     import { onMount } from "svelte";
     import { fade } from "svelte/transition";
+    import { resolve } from "$app/paths";
 
     let width = $state(0);
     let height = $state(0);
@@ -16,7 +19,7 @@
         player = (player == -1 ? playerCache : -1);
     }
 
-    let max = 5;
+    let max = 6;
 
     /**
      * @param {number} mode
@@ -119,6 +122,59 @@
         }
     }
 
+    #sun1 {
+        position: fixed;
+        height: 100%;
+        z-index: 0;
+        left: 30px;
+        opacity: 0.1;
+        animation: treeLeft infinite 15s ease-in-out, surge 50s infinite ease-in-out;
+        animation-delay: 2s;
+    }
+
+    #sun2 {
+        position: fixed;
+        height: 100%;
+        z-index: 0;
+        left: 70px;
+        top: 50px;
+        opacity: 0.2;
+        animation: treeLeft infinite 15s ease-in-out, surgeLite 15s infinite ease-in-out;
+        animation-delay: 5s;
+    }
+
+    @keyframes surge {
+        0%, 100% {
+            opacity: 0.05;
+        }
+        40% {
+            opacity: 0.1;
+        }
+        60% {
+            opacity: 0.5;
+        }
+        85% {
+            opacity: 0.3;
+        }
+    }
+
+    @keyframes surgeLite {
+        0%, 100% {
+            opacity: 0.2;
+            transform: rotate(0deg);
+        }
+        40% {
+            opacity: 0.25;
+        }
+        60% {
+            opacity: 0.3;
+            transform: rotate(-4.5deg);
+        }
+        85% {
+            opacity: 0.25;
+        }
+    }
+
 
     #player {
         z-index: 1000;
@@ -193,13 +249,16 @@
 
 <svelte:window bind:innerWidth={width} bind:innerHeight={height}></svelte:window>
 <div id="view">
-    <img id="background" src="/haven/background.webp" alt="Forest background" style:width={((width >= 990) ? 100 : 180)}%/>
-    <img id="treeLeft" src="/haven/treeLeft.webp" alt="Tree" />
-    <img id="treeRight" src="/haven/treeRight.webp" alt="Tree" />
+    <img id="background" src={resolve("haven/background.webp")} alt="Forest background" style:width={((width >= 990) ? 100 : 180)}%/>
+    <img id="treeLeft" src={resolve("haven/treeLeft.webp")} alt="Tree" />
+    <img id="treeRight" src={resolve("haven/treeRight.webp")} alt="Tree" />
+    <img id="sun1" src={resolve("haven/sun1.webp")} alt="Ray of sunshine" />
+    <img id="sun2" src={resolve("haven/sun2.webp")} alt="Ray of sunshine" />
+
 
     <div id="player" class:mute={player == -1}>
         <div id="container">
-            <img id="pudding" src="/haven/pudding.webp" alt="Hedgehog" />
+            <img id="pudding" src={resolve("haven/pudding.webp")} alt="Hedgehog" />
             <div id="buttons">
                 <button title="Toggle Music" onclick={muteToggle} class:mute={player == -1}><span translate="no" class="material-symbols-outlined">music_off</span></button>
                 {#if player != -1}
@@ -220,6 +279,8 @@
             <iframe id="playerFrame" title="Music Player" style:font-family="Darumadrop One" width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay; encrypted-media" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A369089762&color=%23ff5500&auto_play=true&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false"></iframe><div style="font-size: 10px; color: #cccccc;line-break: anywhere;word-break: normal;overflow: hidden;white-space: nowrap;text-overflow: ellipsis; font-family: Interstate,Lucida Grande,Lucida Sans Unicode,Lucida Sans,Garuda,Verdana,Tahoma,sans-serif;font-weight: 100;"></div>
             {:else if player == 5} 
             <iframe id="playerFrame" title="Music Player" style:font-family="Darumadrop One" width="100%" height="300" scrolling="no" frameborder="no" allow="autoplay; encrypted-media" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%253Aplaylists%253A1353215899&color=%23ff5500&auto_play=true&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false"></iframe><div style="font-size: 10px; color: #cccccc;line-break: anywhere;word-break: normal;overflow: hidden;white-space: nowrap;text-overflow: ellipsis; font-family: Interstate,Lucida Grande,Lucida Sans Unicode,Lucida Sans,Garuda,Verdana,Tahoma,sans-serif;font-weight: 100;"></div>
+            {:else if player == 6}
+            <iframe id="playerFrame" title="Music Player" style:font-family="Darumadrop One" width="100%" height="300" scrolling="no" frameborder="no" allow="autoplay; encrypted-media" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%253Aplaylists%253A598460331&color=%23ff5500&auto_play=true&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false"></iframe><div style="font-size: 10px; color: #cccccc;line-break: anywhere;word-break: normal;overflow: hidden;white-space: nowrap;text-overflow: ellipsis; font-family: Interstate,Lucida Grande,Lucida Sans Unicode,Lucida Sans,Garuda,Verdana,Tahoma,sans-serif;font-weight: 100;"></div>
             {/if}
         </div>
     </div>
