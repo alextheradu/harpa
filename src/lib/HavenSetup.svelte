@@ -126,7 +126,7 @@
                     {/if}
                 </label>
                 <div class="row">
-                    <p class="hint">something with a transparent background would look the best</p>
+                    <p class="hint">something white with a transparent background would look the best</p>
                     {#if logo}
                         <button type="button" class="link" onclick={() => (logo = null)}>Remove</button>
                     {/if}

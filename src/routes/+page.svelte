@@ -6,7 +6,7 @@
     import Turntable from "#lib/Turntable.svelte";
     import HavenSetup from "#lib/HavenSetup.svelte";
     import { loadSettings, saveSettings } from "#lib/havenSettings.js";
-    import havenLogo from "#lib/assets/haven-logo-watercolor.png";
+    import havenLogo from "#lib/assets/haven-logo-white.png";
 
     let width = $state(0);
     let height = $state(0);
@@ -263,6 +263,7 @@
     }
     #settings.solo {
         right: 20px;
+        display: none;
     }
     #settings.asleep {
         opacity: 0;
