@@ -2,48 +2,41 @@
 // @ts-nocheck
 
     import { onMount } from "svelte";
-    import { fade } from "svelte/transition";
     import { resolve } from "$app/paths";
+    import Turntable from "#lib/Turntable.svelte";
+    import HavenSetup from "#lib/HavenSetup.svelte";
+    import { loadSettings, saveSettings } from "#lib/havenSettings.js";
+    import havenLogo from "#lib/assets/haven-logo-watercolor.png";
 
     let width = $state(0);
     let height = $state(0);
 
-    let player = $state(0);
-    let playerCache = $state(0);
+    let vinylLayout = $state("corner");
 
-    function muteToggle() {
-        if (player != -1) {
-            playerCache = player;
-        }
-        
-        player = (player == -1 ? playerCache : -1);
+    let settings = $state(null);
+    let setupOpen = $state(false);
+    let setupFirstRun = $state(false);
+    let awake = $state(false);
+    let sleepTimer;
+
+    function handleSave(next) {
+        if (!saveSettings(next)) return false;
+        settings = next;
+        setupOpen = false;
+        setupFirstRun = false;
+        return true;
     }
 
-    let max = 6;
-
-    /**
-     * @param {number} mode
-     */
-    function cycleTrack (mode) {
-        if (mode == 1) {
-            if (player == max) {
-                player = 0;
-            }
-            else {
-                player++;
-            }
-        }
-        else {
-            if (player == 0) {
-                player = max;
-            }
-            else {
-                player--;
-            }
-        }
+    function openSettings() {
+        setupFirstRun = false;
+        setupOpen = true;
     }
 
-
+    function wake() {
+        awake = true;
+        clearTimeout(sleepTimer);
+        sleepTimer = setTimeout(() => (awake = false), 2500);
+    }
 
     function fullscreen() {
         if (document.fullscreenElement) {
@@ -53,6 +46,15 @@
         document.getElementById("view").requestFullscreen();
     }
     onMount(() => {
+        settings = loadSettings();
+        if (!settings.onboarded) {
+            setupFirstRun = true;
+            setupOpen = true;
+        }
+        const requested = new URLSearchParams(location.search).get("vinyl");
+        if (requested === "center" || requested === "bottom") {
+            vinylLayout = requested;
+        }
         window.addEventListener("fullscreenchange", (e) => {
             if (!document.fullscreenElement) {
                 fullscreenEnabled = false;
@@ -176,64 +178,31 @@
     }
 
 
-    #player {
-        z-index: 1000;
-        position: fixed;
-        left: 20px;
-        bottom: 20px;
-
-        #container {
-            position: relative;
-        }
-        #playerFrame {
-            position: static;
-            z-index: 1000;
-        }
-        #pudding {
-            width: 180px;
-            position: static;
-            z-index: 999;
-            transform: translateY(5px);
-        }
-        #buttons {
-            position: absolute;
-            transform: translateY(-90px) translateX(190px);
-            button {
-                margin: 5px;
-            }
-        }
-    }
-    #player.mute {
-        transform: translateY(19px);
-    }
-
     button {
-        background-color: rgba(198, 110, 10, 0.561);
-        border: solid rgb(221, 158, 80) 4.5px;
-        border-radius: 20px;
+        display: grid;
+        place-items: center;
         padding: 10px;
-        color: white;
+        border: 0;
+        border-radius: 1.25rem;
+        background: var(--haven-orange-deep);
+        cursor: pointer;
+        transition: transform 0.15s ease-out;
         span {
-            font-size: 40px;
-            transform: translateY(2px);
+            font-size: 36px;
+            color: #fff;
             user-select: none;
         }
-        transition: background-color 0.1s ease-in;
     }
     button:hover {
-        background-color: rgb(198, 110, 10);
-        cursor: pointer;
+        transform: scale(1.04);
     }
     button:active {
-        transform: scale(1.1);
-        border: solid rgb(216, 168, 110) 4.5px;
+        transform: scale(1);
     }
-    button.mute {
-        background-color: rgb(198, 110, 10);
-        transform: scale(1.1);
-        border: solid rgb(216, 168, 110) 4.5px;
+    button:focus-visible {
+        outline: 3px solid var(--haven-yellow);
+        outline-offset: 3px;
     }
-
     #fullscreen {
         position: fixed;
         z-index: 1000;
@@ -245,9 +214,68 @@
         display: none;
     }
 
+    #logos {
+        position: fixed;
+        z-index: 900;
+        display: flex;
+        align-items: center;
+        gap: clamp(12px, 2vw, 28px);
+        pointer-events: none;
+        filter: drop-shadow(0 3px 0 oklch(0.32 0.08 42 / 0.4)) drop-shadow(0 6px 16px oklch(0.22 0.06 38 / 0.5));
+        img {
+            height: clamp(64px, 15vh, 150px);
+            width: auto;
+            max-width: 30vw;
+            object-fit: contain;
+        }
+        .org {
+            max-width: 24vw;
+        }
+    }
+    #logos.pos-top-left {
+        top: 24px;
+        left: 28px;
+    }
+    #logos.pos-top-center {
+        top: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    #logos.pos-top-right {
+        top: 24px;
+        right: 28px;
+    }
+    #logos.pos-top-right.clear {
+        top: 84px;
+    }
+    #logos.pos-bottom-right {
+        bottom: 28px;
+        right: 28px;
+    }
+
+    #settings {
+        position: fixed;
+        z-index: 1000;
+        top: 15px;
+        right: 78px;
+        transform: scale(0.8);
+        transition: opacity 0.4s ease-out;
+    }
+    #settings.solo {
+        right: 20px;
+    }
+    #settings.asleep {
+        opacity: 0;
+        pointer-events: none;
+    }
+    #settings.asleep:focus-within {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
 </style>
 
-<svelte:window bind:innerWidth={width} bind:innerHeight={height}></svelte:window>
+<svelte:window bind:innerWidth={width} bind:innerHeight={height} onpointermove={wake} onpointerdown={wake} onkeydown={wake}></svelte:window>
 <div id="view">
     <img id="background" src={resolve("haven/background.webp")} alt="Forest background" style:width={((width >= 990) ? 100 : 180)}%/>
     <img id="treeLeft" src={resolve("haven/treeLeft.webp")} alt="Tree" />
@@ -256,36 +284,34 @@
     <img id="sun2" src={resolve("haven/sun2.webp")} alt="Ray of sunshine" />
 
 
-    <div id="player" class:mute={player == -1}>
-        <div id="container">
-            <img id="pudding" src={resolve("haven/pudding.webp")} alt="Hedgehog" />
-            <div id="buttons">
-                <button title="Toggle Music" onclick={muteToggle} class:mute={player == -1}><span translate="no" class="material-symbols-outlined">music_off</span></button>
-                {#if player != -1}
-                <button title="Previous Track" onclick={() => {cycleTrack(-1)}} transition:fade><span translate="no" class="material-symbols-outlined">skip_previous</span></button>
-                <button title="Next Track" onclick={() => {cycleTrack(1)}} transition:fade><span translate="no" class="material-symbols-outlined">skip_next</span></button>
-                {/if}
-
-            </div>
-            {#if player == 0}
-            <iframe id="playerFrame" title="Music Player" style:font-family="Darumadrop One" width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay; encrypted-media" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A859871056&color=%23ff5500&auto_play=true&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false"></iframe><div style="font-size: 10px; color: #cccccc;line-break: anywhere;word-break: normal;overflow: hidden;white-space: nowrap;text-overflow: ellipsis; font-family: Darumadrop One,Interstate,Lucida Grande,Lucida Sans Unicode,Lucida Sans,Garuda,Verdana,Tahoma,sans-serif;font-weight: 100;"></div>
-            {:else if player == 1}
-            <iframe id="playerFrame" title="Music Player" style:font-family="Darumadrop One" width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay; encrypted-media" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A966761764&color=%23ff5500&auto_play=true&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false"></iframe><div style="font-size: 10px; color: #cccccc;line-break: anywhere;word-break: normal;overflow: hidden;white-space: nowrap;text-overflow: ellipsis; font-family: Interstate,Lucida Grande,Lucida Sans Unicode,Lucida Sans,Garuda,Verdana,Tahoma,sans-serif;font-weight: 100;"></div>
-            {:else if player == 2}
-            <iframe id="playerFrame" title="Music Player" style:font-family="Darumadrop One" width="100%" height="300" scrolling="no" frameborder="no" allow="autoplay; encrypted-media" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%253Aplaylists%253A468765630&color=%23ff5500&auto_play=true&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false"></iframe><div style="font-size: 10px; color: #cccccc;line-break: anywhere;word-break: normal;overflow: hidden;white-space: nowrap;text-overflow: ellipsis; font-family: Interstate,Lucida Grande,Lucida Sans Unicode,Lucida Sans,Garuda,Verdana,Tahoma,sans-serif;font-weight: 100;"></div>
-            {:else if player == 3}
-            <iframe id="playerFrame" title="Music Player" style:font-family="Darumadrop One" width="100%" height="300" scrolling="no" frameborder="no" allow="autoplay; encrypted-media" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%253Aplaylists%253A1746423624&color=%23ff5500&auto_play=true&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false"></iframe><div style="font-size: 10px; color: #cccccc;line-break: anywhere;word-break: normal;overflow: hidden;white-space: nowrap;text-overflow: ellipsis; font-family: Interstate,Lucida Grande,Lucida Sans Unicode,Lucida Sans,Garuda,Verdana,Tahoma,sans-serif;font-weight: 100;"></div>
-            {:else if player == 4}
-            <iframe id="playerFrame" title="Music Player" style:font-family="Darumadrop One" width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay; encrypted-media" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A369089762&color=%23ff5500&auto_play=true&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false"></iframe><div style="font-size: 10px; color: #cccccc;line-break: anywhere;word-break: normal;overflow: hidden;white-space: nowrap;text-overflow: ellipsis; font-family: Interstate,Lucida Grande,Lucida Sans Unicode,Lucida Sans,Garuda,Verdana,Tahoma,sans-serif;font-weight: 100;"></div>
-            {:else if player == 5} 
-            <iframe id="playerFrame" title="Music Player" style:font-family="Darumadrop One" width="100%" height="300" scrolling="no" frameborder="no" allow="autoplay; encrypted-media" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%253Aplaylists%253A1353215899&color=%23ff5500&auto_play=true&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false"></iframe><div style="font-size: 10px; color: #cccccc;line-break: anywhere;word-break: normal;overflow: hidden;white-space: nowrap;text-overflow: ellipsis; font-family: Interstate,Lucida Grande,Lucida Sans Unicode,Lucida Sans,Garuda,Verdana,Tahoma,sans-serif;font-weight: 100;"></div>
-            {:else if player == 6}
-            <iframe id="playerFrame" title="Music Player" style:font-family="Darumadrop One" width="100%" height="300" scrolling="no" frameborder="no" allow="autoplay; encrypted-media" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%253Aplaylists%253A598460331&color=%23ff5500&auto_play=true&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false"></iframe><div style="font-size: 10px; color: #cccccc;line-break: anywhere;word-break: normal;overflow: hidden;white-space: nowrap;text-overflow: ellipsis; font-family: Interstate,Lucida Grande,Lucida Sans Unicode,Lucida Sans,Garuda,Verdana,Tahoma,sans-serif;font-weight: 100;"></div>
+    {#if settings}
+        <div id="logos" class="pos-{settings.logoPosition}" class:clear={!fullscreenEnabled}>
+            <img src={havenLogo} alt="Hack Club Haven" />
+            {#if settings.logo}
+                <img class="org" src={settings.logo} alt="Local Haven logo" />
             {/if}
         </div>
+    {/if}
+
+    {#if settings}
+        <Turntable layout={vinylLayout} playlist={settings.playlist} />
+    {/if}
+
+    <div id="settings" class:asleep={fullscreenEnabled && !awake && !setupOpen} class:solo={fullscreenEnabled}>
+        <button title="Haven settings" aria-label="Haven settings" onclick={openSettings} translate="no"><span class="material-symbols-outlined">settings</span></button>
     </div>
     <div id="fullscreen" class:dissapear={fullscreenEnabled}>
         <button title="Enter Fullscreen" onclick={fullscreen} translate="no"><span class="material-symbols-outlined">fullscreen</span></button>
         <!--<p>Use {"<f>"} key to enter fullscreen</p>-->
     </div>
+
+    {#if settings}
+        <HavenSetup
+            open={setupOpen}
+            firstRun={setupFirstRun}
+            {settings}
+            onsave={handleSave}
+            onclose={() => (setupOpen = false)}
+        />
+    {/if}
 </div>

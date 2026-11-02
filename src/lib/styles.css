@@ -1,5 +1,26 @@
+:root {
+    --font-display: "Darumadrop One", "Jua", ui-rounded, system-ui, sans-serif;
+    --font-body: "Jua", ui-rounded, system-ui, sans-serif;
+
+    --haven-green: #b8c220;
+    --haven-green-deep: #97a01a;
+    --haven-orange-deep: #ed5615;
+    --haven-orange-bright: #fa681b;
+    --haven-orange-mid: #fc8616;
+    --haven-yellow: #ffd059;
+    --haven-butter: #ffe382;
+
+    --sticker: oklch(0.95 0.04 82);
+    --sticker-edge: oklch(0.985 0.012 85);
+    --sticker-well: oklch(0.9 0.05 78);
+    --sticker-ink: oklch(0.34 0.08 45);
+    --sticker-ink-soft: oklch(0.48 0.07 45);
+    --rust: oklch(0.6 0.16 48);
+    --rust-deep: oklch(0.5 0.15 42);
+}
+
 * {
-    font-family: Darumadrop One, Jua, Montserrat, Futura;
+    font-family: var(--font-body);
     color: rgb(255, 227, 181);
 } 
 img {
