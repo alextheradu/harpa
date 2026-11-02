@@ -10,7 +10,7 @@ export default defineConfig({
 				fallback: '404.html'
 			}),
 			paths: {
-				base: "/harpa"
+				base: process.env.VERCEL ? '' : '/harpa'
 			},
 		})
 	]
